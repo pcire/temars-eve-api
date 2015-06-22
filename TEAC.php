@@ -30,7 +30,7 @@ class TEAC
 		$this -> valid[$keyid] = 1;
 		Return TRUE;
 	}
-	
+
 	function is_valid_xml($xml)
 	{
 		if ((stristr($xml, "<?xml version='1.0' encoding='UTF-8'?>")) && (stristr($xml, '<eveapi version="2">')))
@@ -38,7 +38,7 @@ class TEAC
 		else
 			return False;
 	}
-		
+
 	function error_check($xml)
 	{
 		$error_code = (int)$xml->error[0]['code'];
@@ -77,14 +77,14 @@ class TEAC
 		//	return XXXXXXX;
 		*/
 	}
-	
+
 	function get_xml($type, $post = NULL)
 	{
 		$url = '';
 		$xml = '';
 		$error = '';
 		$error_code = '';
-		
+
 		if($type == 'standings')
 			$url = "/corp/ContactList.xml.aspx";
 		elseif($type == 'alliances')
@@ -107,20 +107,20 @@ class TEAC
 			$url = "/account/Characters.xml.aspx";
 
 		if(!empty($post))
-		{ 
+		{
 			foreach($post as $i => $v)
 			{
 				$post[$i] = $i.'='.$v;
 			}
 			$post = implode('&', $post);
 		}
-		
+
 		$cache = FALSE;
 		if($type != 'calllist' && $type != 'standings' && $type != 'alliances' && method_exists($this, 'get_cache'))
 		{
 			$cache = $this -> get_cache($url, $post);
 		}
-		
+
 		if($cache)
 			$ret_val = $cache;
 		else
@@ -130,12 +130,12 @@ class TEAC
 		{
 			$xml = new SimpleXMLElement($ret_val);
 			$error = $this->error_check($xml);
-			
+
 			if (!empty($error[0]))
 			{
 				$error_code = $error[0];
 			}
-			
+
 			switch ($error_code)
 			{
 				case '' :
@@ -163,7 +163,7 @@ class TEAC
 		{
 			Return "NO CURL";
 		}
-		
+
 		$ch = curl_init();
 
 		if(!empty($post))
@@ -176,7 +176,7 @@ class TEAC
 
 		if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off'))
 			curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, 1);
-	
+
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -184,18 +184,67 @@ class TEAC
 
 		$data = curl_exec($ch);
 		curl_close($ch);
-	
+
 		Return $data;
 	}
+
+
+	function get_rest_site($url, $secret, $postData, $type='POST')
+	{
+		if(!function_exists('curl_init'))
+		{
+			Return "NO CURL";
+		}
+		$ch = curl_init();
+
+		if ($type == 'POST') {
+			curl_setopt($ch, CURLOPT_POST, TRUE);
+		}
+		elseif ($type == 'PUT') {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+		}
+		elseif ($type == 'DELETE') {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+		}
+
+		if (isset($postData)) {
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+		}
+
+		curl_setopt($ch, CURLOPT_URL, $url);
+
+		if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off'))
+			curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, 1);
+
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			'Authorization: '.$secret,
+			'Accept: application/json',
+			'Content-Type: application/json'));
+
+		$data = curl_exec($ch);
+		if(curl_errno($ch))
+		{
+			$info = curl_getinfo($ch);
+			$data = 'Request failed with code: '.$info['http_code'];
+		}
+
+		curl_close($ch);
+		Return substr($data, 0, 1) == '{' ? json_decode($data) : $data;
+	}
+
 
 	function corp_info($corp)
 	{
 		$info = array();
 		$post = array();;
 		$post = array('corporationID' => $corp);
-		
+
 		$xml = $this -> get_xml('corp', $post);
-		
+
 		if (($xml) && (gettype($xml) == 'object'))
 		{
 			$info['corpname'] = (string)$xml -> result -> corporationName;
@@ -209,7 +258,7 @@ class TEAC
 				$info['aticker'] = $this -> atags[$info['allianceid']];
 			else
 				$info['aticker'] = '';
-			
+
 			Return ($info);
 		}
 		elseif (($xml) && (gettype($xml) == 'integer'))
@@ -228,8 +277,8 @@ class TEAC
 	{
 		$post = array('keyID' => $keyid, 'vCode' => $vcode);
 		$xml = $this -> get_xml('standings', $post);
-		
-		if (($xml) && (gettype($xml) == 'object')) 
+
+		if (($xml) && (gettype($xml) == 'object'))
 		{
 			if(!empty($xml -> result -> rowset[0]))
 			{
@@ -290,7 +339,7 @@ class TEAC
 					}
 				}
 			}
-			
+
 			Return array($blues, $reds, $count);
 		}
 		elseif (($xml) && (gettype($xml) == 'integer'))
@@ -302,7 +351,7 @@ class TEAC
 		{
 			echo "API System Screwed - Can't Fetch Standings : \n";
 			Return 9999;
-		}		
+		}
 	}
 
 	function get_api_characters($keyid, $vcode)
@@ -321,7 +370,7 @@ class TEAC
 				$charinfo['corpid']=(string)$char['corporationID'];
 				$charinfo['corpname']=(string)$char['corporationName'];
 				$charinfo['charid']=(string)$char['characterID'];
-				
+
 				$corpinfo = $this -> corp_info((string)$char['corporationID']); // corpname, ticker, allianceid, alliance, aticker
 				if (gettype($corpinfo) == 'integer')
 				{
@@ -335,7 +384,7 @@ class TEAC
 		elseif (($xml) && (gettype($xml) == 'integer'))
 		{
 			echo "API call error while fetching toons: \nError Code = $xml for key id = $keyid\n";
-			Return $xml;		
+			Return $xml;
 		}
 		else
 		{
@@ -353,7 +402,7 @@ class TEAC
 		$post = array();
 		$post = array('keyID' => $keyid, 'vCode' => $vcode, 'characterID' => $charid);
 		$xml = $this -> get_xml('charsheet', $post);
-		
+
 		if (($xml) && (gettype($xml) == 'object'))
 		{
 			foreach ($xml->result->rowset[0]->row as $skill)
@@ -363,7 +412,7 @@ class TEAC
 				$name = $skilllist[$id];
 				$skills[strtolower($name)] = $level;
 			}
-			
+
 			return $skills;
 		}
 		elseif (($xml) && (gettype($xml) == 'integer'))
@@ -377,7 +426,7 @@ class TEAC
 			Return 9999;
 		}
 	}
-	
+
 	function roles($keyid, $vcode, $charid)
 	{
 		$roles = NULL;
@@ -386,8 +435,8 @@ class TEAC
 
 		//echo "getting Roles\n";
 		$xml = $this -> get_xml('charsheet', $post);
-	//	$xml = file_get_contents('me.xml');
-		
+		//	$xml = file_get_contents('me.xml');
+
 		if (($xml) && (gettype($xml) == 'object'))
 		{
 			$rg = array(2, 3, 4, 5);
@@ -422,7 +471,7 @@ class TEAC
 		$post = array('keyID' => $keyid, 'vCode' => $vcode, 'characterID' => $charid);
 
 		$xml = $this -> get_xml('charsheet', $post);
-		
+
 		if (($xml) && (gettype($xml) == 'object'))
 		{
 			if (!empty($xml -> result -> rowset[6]))
@@ -453,16 +502,16 @@ class TEAC
 			echo "API System Screwed - Can't Fetch Titles : \n";
 			Return 9999;
 		}
-		
+
 	}
 
 	function militia($keyid, $vcode, $charid)
 	{
 		$post = array();
 		$post = array('keyID' => $keyid, 'vCode' => $vcode, 'characterID' => $charid);
-	
+
 		$xml = $this -> get_xml('facwar', $post);
-		
+
 		if (($xml) && (gettype($xml) == 'object'))
 		{
 			$faction = $xml -> result -> factionName;

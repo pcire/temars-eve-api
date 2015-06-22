@@ -12,7 +12,7 @@ class TEA_Jabber_DB extends TEAC
 {
 	function __construct(&$db_prefix, &$sourcedir, &$modSettings, &$user_info, &$context, &$txt, &$smcFunc, &$settings)
 	{
-	//	$this -> db_prefix = &$db_prefix;
+		//	$this -> db_prefix = &$db_prefix;
 		$this -> sourcedir = &$sourcedir;
 		$this -> modSettings = &$modSettings;
 		$this -> user_info = &$user_info;
@@ -21,73 +21,19 @@ class TEA_Jabber_DB extends TEAC
 		$this -> smcFunc = &$smcFunc;
 		$this -> settings = &$settings;
 	}
-	
-	function db_connect()
-	{
-		$host = $this -> modSettings["tea_jabber_db_host"];
-		$user = $this -> modSettings["tea_jabber_db_user"];
-		$pw = $this -> modSettings["tea_jabber_db_pw"];
-		$this -> connection = mysql_connect($host, $user, $pw, TRUE);
-		if (!$this -> connection)
-		{
-			echo 'MySQL Error:'.mysql_error($this -> connection);
-			return false;
-		}
-		mysql_select_db($this -> modSettings["tea_jabber_db_db"], $this -> connection);
-	}
 
-	function select ($sql, $result_form=MYSQL_NUM)//MYSQL_ASSOC = field names
-	{
-		$data = "";
-		$result = mysql_query($sql, $this -> connection);
 
-		if (!$result)
-		{
-//			echo $sql;
-			echo mysql_error();
-			return false;
-		}
-
-		if (empty($result))
-		{
-			return false;
-		}
-
-		$count = 0;
-
-		while ($row = mysql_fetch_array($result, $result_form))
-		{
-			$data[] = $row;
-		}
-
-		mysql_free_result($result);
-		return $data;
-	}
-
-	function query ($sql)
-	{
-		$return = mysql_query($sql, $this -> connection);
-
-		if (!$return)
-		{
-			echo mysql_error();
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
 	function get_groups()
 	{
 		$ret='';
-		$this -> db_connect();
-		$list = $this -> select("SELECT groupName from ofGroup");
-		if(!empty($list))
+		$secret = $this -> modSettings['tea_jabber_secret'];
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/groups';
+		$groups = $this -> get_rest_site($url, $secret, null, 'GET');
+		if(is_object($groups))
 		{
-			foreach($list as $l)
+			foreach($groups->{'group'} as $group)
 			{
-				$ret[$l[0]] = $l[0];
+				$ret[$group->{'name'}] = $group->{'name'};
 			}
 		}
 		return $ret;
@@ -96,14 +42,24 @@ class TEA_Jabber_DB extends TEAC
 	function get_user_groups($name)
 	{
 		$ret='';
-		$this -> db_connect();
-		$list = $this -> select("SELECT groupName from ofGroupUser WHERE username = '".mysql_real_escape_string($name)."'");
-		if(!empty($list))
+		$secret = $this -> modSettings['tea_jabber_secret'];
+		$name = str_replace("'", "_", $name);
+		$name = str_replace(" ", "_", $name);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($name).'/groups';
+		$groups = $this -> get_rest_site($url, $secret, null, 'GET');
+		if(is_object($groups))
 		{
-			foreach($list as $l)
-			{
-				$ret[$l[0]] = $l[0];
+			if (is_array($groups->{'groupname'})) {
+				foreach($groups->{'groupname'} as $group)
+				{
+					$ret[$group] = $group;
+				}
 			}
+			else {
+				$ret[$groups->{'groupname'}] = $groups->{'groupname'};
+			}
+
 		}
 		return $ret;
 	}
@@ -111,28 +67,38 @@ class TEA_Jabber_DB extends TEAC
 	function add_user($uname, $pw, $name, $email, $groups)
 	{
 		$secret = $this -> modSettings['tea_jabber_secret'];
-		$groups = implode(",", $groups);
 		$uname = str_replace("'", "_", $uname);
 		$uname = str_replace(" ", "_", $uname);
 
-		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/userService/userservice?type=add&secret='.$secret.'&username='.$uname.'&password='.$pw.'&name='.$name.'&email='.$email.'&groups='.$groups;
-		$url = str_replace(" ", "%20", $url);
-		$site = $this -> get_site($url);
-		return;
-		$this -> db_connect();
-		$check = $this -> select("SELECT username from ofUser WHERE username = '".mysql_real_escape_string($name)."'");
-		if(!empty($check))
-		{
-			return("UserName Exists already");
-		}
-		$this -> query("INSERT INTO ofUser (username, plainPassword, email, creationDate, modificationDate) VALUES ('".mysql_real_escape_string($name)."', '".mysql_real_escape_string($pw)."', '".mysql_real_escape_string($email)."', ".time().", 0)");
+		$postData = array(
+			'username' => $uname,
+			'password' => $pw,
+			'name' => $name,
+			'email' => $email
+		);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users';
+		$response = 'Create user... ' . $this -> get_rest_site($url, $secret, $postData);
+
+		$postData = array(
+			'groupname' => $this -> safe_array_keys($groups)
+		);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname).'/groups';
+		$response .=  'Add groups... ' .  $this -> get_rest_site($url, $secret, $postData);
+
+		return $response;
 	}
 
 	function get_user($name)
 	{
-		$this -> db_connect();
-		$get = $this -> select("SELECT username FROM ofUser WHERE username = '".mysql_real_escape_string($name)."'");
-		if(!empty($get))
+		$secret = $this -> modSettings['tea_jabber_secret'];
+		$name = str_replace("'", "_", $name);
+		$name = str_replace(" ", "_", $name);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($name);
+		$user = $this -> get_rest_site($url, $secret, null, 'GET');
+		if(is_object($user))
 		{
 			Return TRUE;
 		}
@@ -148,52 +114,72 @@ class TEA_Jabber_DB extends TEAC
 		$uname = str_replace("'", "_", $uname);
 		$uname = str_replace(" ", "_", $uname);
 
-		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/userService/userservice?type=delete&secret='.$secret.'&username='.$uname;
-		$site = $this -> get_site($url);
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/lockouts/'.urlencode($uname);
+		$this -> get_rest_site($url, $secret, null);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname);
+		$this -> get_rest_site($url, $secret, null, 'DELETE');
 		return;
-		$this -> db_connect();
-		$this -> query("DELETE FROM ofUser WHERE username = '".mysql_real_escape_string($name)."'");
-		$this -> query("DELETE FROM ofGroupUser WHERE username = '".mysql_real_escape_string($name)."'");
-		$this -> query("DELETE FROM ofVCard WHERE username = '".mysql_real_escape_string($name)."'");
 	}
 
-	function update_user($uname, $pw, $name, $email, $groups)
+	function update_user($uname, $pw, $name, $email, $groups, $removeGroups=null)
 	{
 		$secret = $this -> modSettings['tea_jabber_secret'];
-		$groups = implode(",", $groups);
 		$uname = str_replace("'", "_", $uname);
 		$uname = str_replace(" ", "_", $uname);
-		if($pw)
-			$pws = '&password='.$pw;
-		else
-			$pws='';
 
-		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/userService/userservice?type=update&secret='.$secret.'&username='.$uname.$pws.'&name='.$name.'&email='.$email.'&groups='.$groups;
-		$url = str_replace(" ", "%20", $url);
-		$site = $this -> get_site($url);
+		$postData = array(
+			'username' => $uname,
+			'name' => $name,
+			'email' => $email
+		);
+
+		if ($pw)
+			$postData['password'] = $pw;
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname);
+		$this -> get_rest_site($url, $secret, $postData, 'PUT');
+
+
+		$postData = array(
+			'groupname' => $this -> safe_array_keys($groups)
+		);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname).'/groups';
+		$this -> get_rest_site($url, $secret, $postData);
+
+
+		if (isset($removeGroups) && count($removeGroups) > 0) {
+			$postData = array(
+				'groupname' => $this -> safe_array_keys($removeGroups)
+			);
+
+			$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname).'/groups';
+			$this -> get_rest_site($url, $secret, $postData, 'DELETE');
+		}
 		return;
-		$this -> db_connect();
-		$this -> query("UPDATE ofUser SET plainPassword = '".mysql_real_escape_string($pw)."' WHERE username = '".mysql_real_escape_string($name)."'");
 	}
 
-	function add_to_group($name, $group)
+	function add_to_group($uname, $group)
 	{
-		$this -> db_connect();
-		$groups = $this -> get_groups();
-		if(!isset($groups[$group]))
-			Return FALSE;
-		$this -> query("INSERT INTO ofGroupUser (groupName, username, administrator) VALUES ('".mysql_real_escape_string($group)."', '".mysql_real_escape_string($name)."', 0)");
-		Return TRUE;
+		$secret = $this -> modSettings['tea_jabber_secret'];
+		$uname = str_replace("'", "_", $uname);
+		$uname = str_replace(" ", "_", $uname);
+
+		$postData = array(
+			'groupname' => $this -> safe_array_keys($group)
+		);
+
+		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname).'/groups';
+		$this -> get_rest_site($url, $secret, $postData);
+		return TRUE;
 	}
 
-	function vcard($uname, $name)
-	{
-		$this -> db_connect();
-		$vcard = '<vCard xmlns="vcard-temp" version="2.0" prodid="-//HandGen//NONSGML vGen v1.0//EN">
-<FN>'.$name.'</FN>
-<NICKNAME>'.$name.'</NICKNAME>
-</vCard>';
-		$this -> query("REPLACE INTO ofVCard (username, vcard) VALUES ('".mysql_real_escape_string($uname)."', '".mysql_real_escape_string($vcard)."')");
+	function safe_array_keys($mixed) {
+		if (!isset($mixed) || !is_array($mixed) || count($mixed) == 0 || array_keys($mixed)[0] === 0)
+			return $mixed;
+		else
+			return array_keys($mixed);
 	}
 }
 

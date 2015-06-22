@@ -12,7 +12,7 @@ class TEA_Jabber extends TEAC
 {
 	function __construct(&$db_prefix, &$sourcedir, &$modSettings, &$user_info, &$context, &$txt, &$smcFunc, &$settings)
 	{
-	//	$this -> db_prefix = &$db_prefix;
+		//	$this -> db_prefix = &$db_prefix;
 		$this -> sourcedir = &$sourcedir;
 		$this -> modSettings = &$modSettings;
 		$this -> user_info = &$user_info;
@@ -99,22 +99,7 @@ class TEA_Jabber extends TEAC
 
 	function settings($scripturl)
 	{
-		// $chars = $this -> tea -> get_characters($userid, $api);
-
-		// $charlist = array();
-		// if(!empty($chars))
-		// {
-			// foreach($chars as $char)
-			// {
-				// $charlist[$char['charid']] = $char['name'];
-				// if($charid == $char['charid'])
-				// {
-					// $corp = $char['corpid'];
-					// $alliance = $char['allianceid'];
-				// }
-			// }
-		// }
-		if(!empty($this -> tea -> modSettings['tea_jabber_db_host']))
+		if(!empty($this -> tea -> modSettings['tea_jabber_admin_url']))
 		{
 			$gl = $this -> db -> get_groups();
 			$groups2 = $this -> tea -> MemberGroups(TRUE);
@@ -123,34 +108,7 @@ class TEA_Jabber extends TEAC
 			{
 				$groups[$i] = $g;
 			}
-			// require_once($this -> sourcedir . '/TS3_Class/TeamSpeak3.php');
-			// $tslv = TeamSpeak3::LIB_VERSION;
 
-			// TeamSpeak3::init();
-
-			// try
-			// {
-				// $ts3 = TeamSpeak3::factory("serverquery://".$this -> modSettings["tea_ts_username"].":".$this -> modSettings["tea_ts_password"]."@".$this -> modSettings["tea_ts_host"].":".$this -> modSettings["tea_ts_qport"]."/?server_port=".$this -> modSettings["tea_ts_port"]."&blocking=0");
-
-				// $sg = $ts3 -> serverGroupList();
-				// $gl[0] = '-';
-				// foreach($sg as $n)
-				// {
-				//	if((int)$n -> type == 1 && (string)$n -> name != 'Guest')
-					//	$gl['s'.(int)$n -> sgid] = 'Server - '.(string)$n -> name;
-				//		$gl['s'.(int)$n -> sgid] = (string)$n -> name;
-				//}
-		//		$cg = $ts3 -> channelGroupList();
-		//		foreach($cg as $i => $n)
-		//		{
-		//			if((int)$n -> type == 1)
-		//				$gl['c'.$i] = 'Channel - '.(string)$n -> name;
-		//		}
-			//}
-			//catch(Exception $e)
-			//{
-			//	echo("[ERROR] " . $e->getMessage() . "\n");
-			//}
 		}
 
 		$cgq = $this -> smcFunc['db_query']('', "SELECT id, value FROM {db_prefix}tea_jabber_groups ORDER BY id");
@@ -160,7 +118,7 @@ class TEA_Jabber extends TEAC
 			foreach($cgq as $cgqs)
 				$cg[$cgqs[0]] = $cgqs[1];
 		}
-		
+
 		$groupcheck = '<dt>'.$this -> txt['tea_groupmon'].'
 		<table><tr><td>Name</td><td>Checked</td></tr>';
 		foreach($gl as $id => $g)
@@ -184,26 +142,21 @@ class TEA_Jabber extends TEAC
 				<input type="hidden" name="value" value="" />
 			</form>
 			<form action="'.$scripturl.'?action=admin;area=tea;sa=jabber;save" method="post" accept-charset="ISO-8859-1" name="tea_jabber_settings">',
-				// enable?
-				array('check', 'tea_jabber_enable'),
+			// enable?
+			array('check', 'tea_jabber_enable'),
 			'',
 			$groupcheck,
 			'',
-				array('text', 'tea_jabber_db_host', 15),
-				array('text', 'tea_jabber_db_user', 15),
-				array('text', 'tea_jabber_db_pw', 15),
-				array('text', 'tea_jabber_db_db', 15),
-		//		array('text', 'tea_jabber_db_pre', 15),
-				array('text', 'tea_jabber_unf', 15),
-				array('text', 'tea_jabber_nf', 15),
-				array('text', 'tea_jabber_admin_url', 30),
-				array('text', 'tea_jabber_secret', 15),
-				'<dt>Jabber Info (HTML) will display on Jabber area of profile</dt>',
-				'<dt><textarea name="tea_jabber_info" cols=120 rows=6>'.$this -> modSettings['tea_jabber_info'].'</textarea></dt>',
-				'',
-				array('select', 'tea_jabber_restricted', $groups),
-				'',
-		//		'',
+			array('text', 'tea_jabber_admin_url', 30),
+			array('text', 'tea_jabber_secret', 15),
+			array('text', 'tea_jabber_unf', 15),
+			array('text', 'tea_jabber_nf', 15),
+			'<dt>Jabber Info (HTML) will display on Jabber area of profile</dt>',
+			'<dt><textarea name="tea_jabber_info" cols=120 rows=6>'.$this -> modSettings['tea_jabber_info'].'</textarea></dt>',
+			'',
+			array('select', 'tea_jabber_restricted', $groups),
+			'',
+			//		'',
 		);
 		$rules = $this -> smcFunc['db_query']('', "SELECT id, smf, jabber, nf FROM {db_prefix}tea_jabber_rules ORDER BY id");
 		$rules = $this -> tea -> select($rules);
@@ -232,7 +185,6 @@ class TEA_Jabber extends TEAC
 		$config_vars[101] = array('select', 'tea_jabber_addrule_group', $groups);
 		$config_vars[102] = array('select', 'tea_jabber_addrule_jabber', $gl);
 		$config_vars[103] = array('text', 'tea_jabber_addrule_nf', 15);
-		//$config_vars[103] = array('hidden', 'tea_jabber_editrule_id');
 		$config_vars[] = '
 <script type="text/javascript">
 function edit(id, smf, jabber, nf)
@@ -258,7 +210,7 @@ function move(id, value)
 	subform(value, id);
 }
 </script>';
-			if (array_key_exists('minitype',$_POST)){
+		if (array_key_exists('minitype',$_POST)){
 			if($_POST['minitype'] == 'delrule')
 			{
 				if(!is_numeric($_POST['value']))
@@ -275,16 +227,16 @@ function move(id, value)
 				$rules = $this -> tea -> select($rules);
 				if(!empty($rules))
 				{
-				//	foreach($rules as $rule)
-				//	{
-				//		$rl[$rule[1]][$rule[0]] = $rule[0];
-				//		if($rule[0] == $id)
-				//			$main = $rule[1];
-				//	}
-				//	if(isset($main))
-				//	{
-				//		$rules = $rl[$main];
-				//		sort($rules);
+					//	foreach($rules as $rule)
+					//	{
+					//		$rl[$rule[1]][$rule[0]] = $rule[0];
+					//		if($rule[0] == $id)
+					//			$main = $rule[1];
+					//	}
+					//	if(isset($main))
+					//	{
+					//		$rules = $rl[$main];
+					//		sort($rules);
 					foreach($rules as $i => $rule)
 					{
 						if($rule[0] == $id)
@@ -302,20 +254,20 @@ function move(id, value)
 				}
 				redirectexit('action=admin;area=tea;sa=jabber');
 			}
-			}
-			if(isset($_POST['group']))
+		}
+		if(isset($_POST['group']))
+		{
+			$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_groups");
+			foreach($_POST['group'] as $g => $v)
 			{
-				$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_groups");
-				foreach($_POST['group'] as $g => $v)
-				{
-					$this -> tea -> query("
+				$this -> tea -> query("
 						INSERT INTO {db_prefix}tea_jabber_groups
 							(id, value)
 						VALUES 
 							({string:id}, {int:value})",
-							array('id' => $g, 'value' => '1'));
-				}
+					array('id' => $g, 'value' => '1'));
 			}
+		}
 		// Saving?
 		if (isset($_GET['save']))
 		{
@@ -343,8 +295,8 @@ function move(id, value)
 		}
 
 		$this -> context['post_url'] = $scripturl . '?action=admin;area=tea;sa=jabber;save';
-	//	$context['settings_title'] = $txt['tea_tea'];
-	//	$context['settings_message'] = $txt['tea_settings_message'];
+		//	$context['settings_title'] = $txt['tea_tea'];
+		//	$context['settings_message'] = $txt['tea_settings_message'];
 
 		prepareDBSettingContext($config_vars);
 	}
@@ -355,14 +307,14 @@ function move(id, value)
 		if(!$this -> modSettings["tea_enable"] || !$this -> modSettings["tea_jabber_enable"])
 			Return;
 
-	//	echo $memberID." kk ".$db_prefix;
-	//	var_dump($_POST);
+		//	echo $memberID." kk ".$db_prefix;
+		//	var_dump($_POST);
 		if(!is_numeric($memberID))
 			return;
 
 		$rules = $this -> smcFunc['db_query']('', "SELECT id, smf, jabber, nf FROM {db_prefix}tea_jabber_rules");
 		$rules = $this -> tea -> select($rules);
-			
+
 		$usergroupssql = $this -> smcFunc['db_query']('', "SELECT id_group, additional_groups, email_address FROM {db_prefix}members WHERE id_member = ".$memberID);
 		$usergroupssql = $this -> tea -> select($usergroupssql);
 
@@ -425,117 +377,84 @@ function move(id, value)
 			//	$ts3 = TeamSpeak3::factory("serverquery://".$this -> modSettings["tea_ts_username"].":".$this -> modSettings["tea_ts_password"]."@".$this -> modSettings["tea_ts_host"].":".$this -> modSettings["tea_ts_qport"]."/?server_port=".$this -> modSettings["tea_ts_port"]."&blocking=0");
 
 
-					$dupcheck = $this -> smcFunc['db_query']('', "SELECT id, username, name FROM {db_prefix}tea_jabber_users WHERE username = '".mysql_real_escape_string($name)."'");
-					$dupcheck = $this -> tea -> select($dupcheck);
-					if(!empty($dupcheck))
-					{
-						if($dupcheck[0][0] != $memberID)
-						{
-							$_SESSION['tea_jabber_error'][] = 'UniqueID already attached to another forum Member';
-							return;
-						}
-					}
+			$dupcheck = $this -> smcFunc['db_query']('', "SELECT id, username, name FROM {db_prefix}tea_jabber_users WHERE username = '".mysql_real_escape_string($name)."'");
+			$dupcheck = $this -> tea -> select($dupcheck);
+			if(!empty($dupcheck))
+			{
+				if($dupcheck[0][0] != $memberID)
+				{
+					$_SESSION['tea_jabber_error'][] = 'UniqueID already attached to another forum Member';
+					return;
+				}
+			}
 
-					$pw = $_POST['tea_jabber_pw'];
-					$scheck = $this -> smcFunc['db_query']('', "SELECT id, username, name FROM {db_prefix}tea_jabber_users WHERE id = ".$memberID);
-					$scheck = $this -> tea -> select($scheck);
-					if(!empty($scheck))
+			$pw = $_POST['tea_jabber_pw'];
+			$scheck = $this -> smcFunc['db_query']('', "SELECT id, username, name FROM {db_prefix}tea_jabber_users WHERE id = ".$memberID);
+			$scheck = $this -> tea -> select($scheck);
+			if(!empty($scheck))
+			{
+				if($scheck[0][1] != $name)
+				{
+					//	try
+					//	{
+					$this -> db -> del_user($scheck[0][1]);
+					$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_users WHERE username = '".mysql_real_escape_string($scheck[0][1])."'");
+					if($get = $this -> db -> get_user($name))
 					{
-						if($scheck[0][1] != $name)
-						{
-						//	try
+						//	if($pw != $get['pw'])
 						//	{
-							$this -> db -> del_user($scheck[0][1]);
-							$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_users WHERE username = '".mysql_real_escape_string($scheck[0][1])."'");
-							if($get = $this -> db -> get_user($name))
-							{
-							//	if($pw != $get['pw'])
-							//	{
-									$_SESSION['tea_jabber_error'][] = 'Unlinked Jabber Account Found, Unable to Link';
-									return;
-							//	}
-							}
-							else
-							{
-								if(!empty($pw) && !strstr($pw, '*'))
-									$this -> db -> add_user($name, $pw, $nick, $email, $jabbergs);
-								else
-								{
-									$_SESSION['tea_jabber_error'][] = 'Invalid Password';
-									return;
-								}
-							}
+						$_SESSION['tea_jabber_error'][] = 'Unlinked Jabber Account Found, Unable to Link';
+						return;
 						//	}
-						//	catch(Exception $e)
-						//	{
-								//maybe online?
-						//	}
-						}
-						else
-						{
-							if(!empty($pw) && !strstr($pw, '*'))
-								$this -> db -> update_user($name, $pw, $nick, $email, $jabbergs);
-							else
-							{
-								$this -> db -> update_user($name, FALSE, $nick, $email, $jabbergs);
-							}
-						}
 					}
 					else
 					{
-						if($get = $this -> db -> get_user($name))
-						{
-							if($pw != $get['pw'])
-							{
-								$_SESSION['tea_jabber_error'][] = 'Unlinked Jabber Account Found';
-								return;
-							}
-						}
+						if(!empty($pw) && !strstr($pw, '*'))
+							$this -> db -> add_user($name, $pw, $nick, $email, $jabbergs);
 						else
 						{
-							if(!empty($pw) && !strstr($pw, '*'))
-								$this -> db -> add_user($name, $pw, $nick, $email, $jabbergs);
-							else
-							{
-								$_SESSION['tea_jabber_error'][] = 'Invalid Password';
-								return;
-							}
+							$_SESSION['tea_jabber_error'][] = 'Invalid Password';
+							return;
 						}
 					}
+					//	}
+					//	catch(Exception $e)
+					//	{
+					//maybe online?
+					//	}
+				}
+				else
+				{
+					if(!empty($pw) && !strstr($pw, '*'))
+						$this -> db -> update_user($name, $pw, $nick, $email, $jabbergs);
+					else
+					{
+						$this -> db -> update_user($name, FALSE, $nick, $email, $jabbergs);
+					}
+				}
+			}
+			else
+			{
+				if($get = $this -> db -> get_user($name))
+				{
+					if($pw != $get['pw'])
+					{
+						$_SESSION['tea_jabber_error'][] = 'Unlinked Jabber Account Found';
+						return;
+					}
+				}
+				else
+				{
+					if(!empty($pw) && !strstr($pw, '*'))
+						$this -> db -> add_user($name, $pw, $nick, $email, $jabbergs);
+					else
+					{
+						$_SESSION['tea_jabber_error'][] = 'Invalid Password';
+						return;
+					}
+				}
+			}
 
-
-
-		//	if(!empty($jabbergs))
-		//	{
-
-				// $cgq = $this -> smcFunc['db_query']('', "SELECT id, value FROM {db_prefix}tea_jabber_groups ORDER BY id");
-				// $cgq = $this -> tea -> select($cgq);
-				// if(!empty($cgq))
-				// {
-					// foreach($cgq as $cgqs)
-						// $cg[$cgqs[0]] = $cgqs[1];
-				// }
-				// $userg = $this -> db -> get_user_groups($name);
-				// if(!empty($userg))
-				// {
-					// foreach($userg as $g)
-					// {
-						// if(!isset($jabbergs[$g]) && $cg[$g] == 1)
-							// $this -> db -> rem_from_group($name, $g);
-					// }
-				// }
-				// foreach($jabbergs as $g => $v)
-				// {
-					// if(!isset($userg[$g]))
-						// $this -> db -> add_to_group($name, $g);
-				// }
-		//	}
-			//}
-			//catch(Exception $e)
-			//{
-			//	$_SESSION['tea_jabber_error'][] = $e->getMessage();
-			//	$error = TRUE;
-			//}
 			if(!$error)
 				$this -> tea -> query("
 					REPLACE INTO {db_prefix}tea_jabber_users
@@ -558,18 +477,18 @@ function move(id, value)
 	{
 		$this -> online_users();
 	}
-	
+
 	function all_users()
 	{
 		unset ($jusers);
 		unset ($rules);
 		$jusers = $this -> smcFunc['db_query']('', "SELECT id, username, name FROM {db_prefix}tea_jabber_users");
 		$jusers = $this -> tea -> select($jusers);
-		
+
 		$rules = $this -> smcFunc['db_query']('', "SELECT id, smf, jabber, nf FROM {db_prefix}tea_jabber_rules");
 		$rules = $this -> tea -> select($rules);
-		
-		
+
+
 		foreach ($jusers as $u)
 		{
 			unset ($usergroupssql);
@@ -581,13 +500,12 @@ function move(id, value)
 			$memberID=$u[0];
 			$name = $u[1];
 			$nick = $this -> format_jabber_name($memberID, $u[2], FALSE, FALSE);
-			
+
 			$usergroupssql = $this -> smcFunc['db_query']('', "SELECT id_group, additional_groups, email_address FROM {db_prefix}members WHERE id_member = ".$memberID);
 			$usergroupssql = $this -> tea -> select($usergroupssql);
 
 			if(!empty($usergroupssql))
 			{
-				//var_dump($this -> modSettings["tea_jabber_restricted"]);
 				if ($usergroupssql[0][0] == $this -> modSettings["tea_jabber_restricted"])
 				{
 					$this -> db -> del_user($name);
@@ -595,19 +513,19 @@ function move(id, value)
 					echo "Removing : ".$name."\n";
 					continue;
 				}
-		
+
 				$email = $usergroupssql[0][2];
 				$usergroups[$usergroupssql[0][0]] = true;
 				if(!empty($usergroupssql[0][1]))
 				{
-					$usergroupssql[0][1] = explode(",", $usergroupssql[0][1]);					
+					$usergroupssql[0][1] = explode(",", $usergroupssql[0][1]);
 					foreach($usergroupssql[0][1] as $g)
 					{
 						$usergroups[$g] = true;
 					}
 				}
 			}
-			
+
 			if(!empty($rules))
 			{
 				foreach($rules as $r)
@@ -618,7 +536,7 @@ function move(id, value)
 					}
 				}
 			}
-			
+
 			$current_groups = $this -> db -> get_user_groups($name);
 			if (!empty($current_groups))
 				natsort($current_groups);
@@ -626,7 +544,7 @@ function move(id, value)
 				$current_groups = array();
 			if (!empty($jabbergs))
 				natsort($jabbergs);
-			else 
+			else
 				$jabbergs = array();
 
 			$adding_group = array_diff_key($jabbergs,$current_groups);
@@ -634,26 +552,26 @@ function move(id, value)
 			//var_dump($adding_group);
 			//var_dump($removing_group);
 			//die;
-			
+
 			//var_dump($jabbergs);
-			
+
 			if(!empty($jabbergs))
-            		{
+			{
 				if (!empty($adding_group) || !empty($removing_group))
 				{
 					//echo "Updating groups for : ".$name."\n";
-					$this -> db -> update_user($name, FALSE, $nick, $email, $jabbergs);
+					$this -> db -> update_user($name, FALSE, $nick, $email, $jabbergs, $removing_group);
 				}
 			}
 			else
 			{
 				$this -> db -> del_user($name);
-                		$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_users WHERE username = '".$name."'");
+				$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_users WHERE username = '".$name."'");
 				echo "Removing : ".$name."\n";
 			}
 		}
 	}
-		
+
 
 	function all_users_old()
 	{
@@ -734,7 +652,7 @@ function move(id, value)
 							}
 						}
 					}
-				//	$cinfo = $ts3 -> clientGetServerGroupsByDbid((int)$c['cldbid']);
+					//	$cinfo = $ts3 -> clientGetServerGroupsByDbid((int)$c['cldbid']);
 				}
 			}
 		}
@@ -777,16 +695,16 @@ function move(id, value)
 						if($smf[0][5] < $time)
 						{
 							$char = $smf[0][3];
-						//	$chars = $this -> tea -> get_all_chars($smf[0][0]);
+							//	$chars = $this -> tea -> get_all_chars($smf[0][0]);
 							$name = $this -> format_ts_name($smf[0][0], $char);
-						//	$aid = NULL;
+							//	$aid = NULL;
 							if(!empty($name))
 							{
-						//		foreach($chars as $i => $ch)
-						//		{
-						//			if($ch[0] == $char)
-						//				$aid = $i;
-						//		}
+								//		foreach($chars as $i => $ch)
+								//		{
+								//			if($ch[0] == $char)
+								//				$aid = $i;
+								//		}
 								if($name != $cnick)
 								{
 									if($this -> modSettings["tea_ts_kickm"] != 0 && $smf[0][4] != 0 && $smf[0][4] < (time() - $this -> modSettings["tea_ts_kickm"] * 60))
@@ -884,11 +802,11 @@ function move(id, value)
 				$name = str_replace('#name#', $char, $name);
 			}
 		}
-	//	if(strlen($name) > 30)
-	//	{
-	//		$name = substr($name, 0, 30);
-	//	}
-		
+		//	if(strlen($name) > 30)
+		//	{
+		//		$name = substr($name, 0, 30);
+		//	}
+
 		if($nospace)
 			$name = str_replace(" ", "_", $name);
 		$name = str_replace("'","_", $name);
@@ -955,19 +873,6 @@ function template_edit_tea_jabber()
 				$sname='';
 			}
 			echo '<tr><td colspan="2"><hr></td></tr>';
-		//	if(isset($modSettings["tea_jabber_method_online"]) && $modSettings["tea_jabber_method_online"])
-		//		$count[] = 'online';
-		//	if(isset($modSettings["tea_jabber_method_create"]) && $modSettings["tea_jabber_method_create"])
-		//		$count[] = 'create';
-		//	if(isset($modSettings["tea_jabber_method_priv"]) && $modSettings["tea_jabber_method_priv"])
-		//		$count[] = 'priv';
-		//	if(count($count) == 1)
-		//		echo '<tr><td><input type="hidden" name="method" value="'.$count[0].'">';
-		//	if(isset($modSettings["tea_jabber_method_online"]) && $modSettings["tea_jabber_method_online"])
-		//	{
-		//		if(count($count) != 1)
-		//			echo '<tr><td><input type="radio" name="method" value="online"> Online Name Check</td></tr>';
-		//	}
 			echo '<tr><td>Main Char</td></tr>';
 			echo '<tr><td>';
 			if(!$modSettings["tea_enable"])
@@ -987,61 +892,11 @@ function template_edit_tea_jabber()
 				echo '</select>';
 			}
 			echo '</td></tr><tr><td>Password: <input type="password" name="tea_jabber_pw" value=""></td><td><font color=red>Please Note this password is sent to the Openfire server as plain text and Openfire itself does not store it using a one way hash - ie this is not secure so don\'t use your bank account password you muppet</font></td></tr>';
-		//	if(isset($modSettings["tea_jabber_method_create"]) && $modSettings["tea_jabber_method_create"])
-		//	{
-		//		if(count($count) != 1)
-		//			echo '<tr><td><input type="radio" name="method" value="create"> Use jabber Unique ID</td></tr>';
-		//		echo '<tr><td>Register Using your jabber Unique ID</td></tr>';
-		//		echo '<tr><td><input type="text" name="jabberid" value="'.$uniqueid.'"></td></tr>';
-		//	}
 		}
 		else
 		{
 			echo "<tr><td>[ERROR] No API Info Found and is Required for Character Info</td></tr>";
 		}
-	//		echo '<tr><td colspan="3"><hr class="hrcolor" width="100%" size="1"/></td></tr>';
-	//	echo '<tr><td>
-	//				<b>', $txt['tea_status'], ':</b></td><td>'.$info['status'];
-	//	if($info['status'] == 'API Error')
-	//		echo ' ('.$info['error'].')';
-	//	echo '</td>
-	//		</tr><tr><td><b>', $txt['tea_mainrule'], ':</b></td><td>'.$info['mainrule'].'</td>
-	//		</tr><tr><td><b>', $txt['tea_aditrules'], ':</b></td><td>'.$info['aditrules'].'</td>
-	//		</tr><tr><td>
-	//									<b>', $txt['tea_characters'], ':</b></td><td>';
-	//	if(!empty($info['charnames']))
-	//	{
-	//		echo '<style type="text/css">
-//green {color:green}
-//blue {color:blue}
-//red {color:red}
-//</style>';
-	//		$echo = array();
-	//		foreach($info['charnames'] as $char)
-	//		{
-	//			$char[3] = $char[3] != '' ? ' / <blue>'.$char[3].'</blue>' : '';
-	//			$echo[] = '['.$char[1].'] '.$char[0].' (<green>'.$char[2].'</green>'.$char[3].')';
-	//		}
-	//		echo implode('<br>', $echo);
-	//	}
-	//	echo '</td></tr>
-	//	<tr><td>
-	//									<b>', $txt['tea_userid'], ':</b></td>
-	//									<td>';
-	//				if($info['userid'] == "")
-	//					echo '<input type="text" name="tea_user_id[]" value="'.$info['userid'].'" size="20" />';
-					// else
-					// {
-						// echo '<input type="hidden" name="tea_user_id[]" value="'.$info['userid'].'" size="20" />';
-						// echo $info['userid'].'</td><td> <input type="checkbox" name="del_api[]" value="'.$info['userid'].'" /> Delete</td>';
-					// }
-						// echo '			</td>
-								// </tr><tr>
-									// <td width="40%">										<b>', $txt['tea_api'], ':</b></td>
-										// <td><input type="text" name="tea_user_api[]" value="'.$info['api'].'" size="64" />
-									// </td>
-								// </tr>';
-			//	}
 		template_profile_save();
 	}
 	echo '

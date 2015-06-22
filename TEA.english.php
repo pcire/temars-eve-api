@@ -80,27 +80,13 @@ $txt['tea_ts_kickm'] = 'Incorrect Name Kick after x Mins (0 = Disabled)';
 
 //Jabber Settings
 $txt['tea_jabber_enable'] = 'Enable Jabber for TEA Mod';
-$txt['tea_jabber_host'] = 'Address of Host (localhost or 127.0.0.1 if same server)';
-$txt['tea_jabber_qport'] = 'Server Query Port';
-$txt['tea_jabber_port'] = 'Server Port';
-$txt['tea_jabber_username'] = 'Query Username';
-$txt['tea_jabber_password'] = 'Query Password';
 $txt['tea_jabber_unf'] = 'Username Format (use #at# #ct# for alliance/corp tags and #name# for char name)';
 $txt['tea_jabber_nf'] = 'Name Format (use #at# #ct# for alliance/corp tags and #name# for char name)';
 $txt['tea_jabber_addrule_group'] = 'SMF Group';
 $txt['tea_jabber_addrule_jabberg'] = 'jabber Group';
 $txt['tea_jabber_addrule_nf'] = 'Name Format (use #at# #ct# for alliance/corp tags and #name# for char name)<br>Leave Blank for Default, #at# #ct# are for EVE only';
-$txt['tea_jabber_db_need'] = 'Jabber Database Details, Only Required for UniqueID Method';
-$txt['tea_jabber_db_host'] = 'Jabber Database host eg localhost';
-$txt['tea_jabber_db_user'] = 'Jabber Database username';
-$txt['tea_jabber_db_pw'] = 'Jabber Database password';
-$txt['tea_jabber_db_db'] = 'Jabber Database database';
-$txt['tea_jabber_db_pre'] = 'Jabber Database prefix';
-$txt['tea_jabber_dbid'] = 'Server Database ID';
-$txt['tea_jabber_method_online'] = 'Allow Online Method';
-$txt['tea_jabber_method_create'] = 'Allow jabber UniqueID Method (Requires jabber to run as MySQL)';
 $txt['tea_jabber_admin_url'] = 'URL to Admin Page for Openfire eg. http://localhost:9090';
-$txt['tea_jabber_secret'] = 'Secret Passcode to Access User Service';
+$txt['tea_jabber_secret'] = 'Secret key to access REST API (plugin for Openfire)';
 $txt['tea_jabber_restricted'] = 'Group to deny access to Jabber';
 
 
