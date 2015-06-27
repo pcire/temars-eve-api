@@ -665,12 +665,12 @@ class TEA extends TEAC
 														{
 															Break;
 														}
-														$amatch = FALSE;
+														$match = FALSE;
 														Break;
 													}
 													else
 													{
-														$amatch = FALSE;
+														$match = FALSE;
 														Break 2;
 													}	
 												case 'alliance':
