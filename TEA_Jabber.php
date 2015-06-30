@@ -397,7 +397,7 @@ function move(id, value)
 				{
 					//	try
 					//	{
-					$this -> db -> del_user($scheck[0][1]);
+					$this -> db -> del_user($scheck[0][1], false);
 					$this -> tea -> query("DELETE FROM {db_prefix}tea_jabber_users WHERE username = '".mysql_real_escape_string($scheck[0][1])."'");
 					if($get = $this -> db -> get_user($name))
 					{
@@ -788,7 +788,7 @@ function move(id, value)
 			}
 			if(!empty($charinfo))
 			{
-				if(isset($nf))
+				if(trim($nf) != false)
 					$name = $nf;
 				else
 				{

@@ -108,14 +108,16 @@ class TEA_Jabber_DB extends TEAC
 		}
 	}
 
-	function del_user($uname)
+	function del_user($uname, $lockout=true)
 	{
 		$secret = $this -> modSettings['tea_jabber_secret'];
 		$uname = str_replace("'", "_", $uname);
 		$uname = str_replace(" ", "_", $uname);
 
-		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/lockouts/'.urlencode($uname);
-		$this -> get_rest_site($url, $secret, null);
+		if ($lockout) {
+			$url = $this->modSettings['tea_jabber_admin_url'] . '/plugins/restapi/v1/lockouts/' . urlencode($uname);
+			$this->get_rest_site($url, $secret, null);
+		}
 
 		$url = $this -> modSettings['tea_jabber_admin_url'].'/plugins/restapi/v1/users/'.urlencode($uname);
 		$this -> get_rest_site($url, $secret, null, 'DELETE');
